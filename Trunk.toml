@@ -1,0 +1,23 @@
+[build]
+target = "index.html"
+dist = "dist"
+public_url = "/identi/"
+
+[watch]
+ignore = [
+    "assets/tailwind.css",
+]
+
+[[hooks]]
+stage = "pre_build"
+command = "dx"
+command_arguments = ["build", "--platform", "web"]
+
+[[hooks]]
+stage = "pre_build"
+command = "npx"
+command_arguments = [
+    "@tailwindcss/cli",
+    "-i", "./tailwind.css",
+    "-o", "./assets/tailwind.css"
+]

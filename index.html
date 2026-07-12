@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TaskFlow" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <link data-trunk rel="rust" data-wasm-opt="z" />
+
+  <link data-trunk rel="css" href="assets/main.css" />
+  <link data-trunk rel="css" href="assets/tailwind.css" />
+
+  <link data-trunk rel="copy-file" href="manifest.json" />
+  <link data-trunk rel="copy-file" href="sw.js" />
+
+  <title>Identi</title>
+</head>
+<body>
+<div id="main"></div>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('Service worker registration failed:', err);
+    });
+  }
+</script>
+</body>
+</html>
