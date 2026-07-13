@@ -91,7 +91,7 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
                     input {
                         class: "w-fit",
                         r#type: "time",
-                        value: time_format(start_time_part(), twelve_hour),
+                        value: start_time_part().format("%H:%M").to_string(),
                         oninput: move |evt| {
                             start_time_part
                                 .set(chrono::NaiveTime::parse_from_str(&evt.value(), "%H:%M").unwrap());
@@ -110,7 +110,7 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
                     input {
                         class: "w-fit",
                         r#type: "time",
-                        value: time_format(end_time_part(), twelve_hour),
+                        value: end_time_part().format("%H:%M").to_string(),
                         oninput: move |evt| {
                             end_time_part
                                 .set(chrono::NaiveTime::parse_from_str(&evt.value(), "%H:%M").unwrap());
