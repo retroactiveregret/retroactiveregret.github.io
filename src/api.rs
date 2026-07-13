@@ -99,7 +99,7 @@ pub fn switch(
     let mut write = binding.front_periods.write();
     if let Some((_, fp)) = write.last_mut() {
         let delta = (time - fp.started_at).num_seconds();
-        if fp.ended_at.is_none() && delta >= 0 && delta < 0 {
+        if fp.ended_at.is_none() && delta >= 0 && delta < 20 {
             fp.assignments = assignments;
             fp.note = note;
             return Ok(fp.to_owned());

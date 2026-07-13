@@ -1,13 +1,13 @@
-use chrono::NaiveDate;
-use chrono::Local;
-use dioxus::prelude::*;
-use uuid::Uuid;
-use crate::Route;
 use crate::api::local_naive_to_utc;
 use crate::api::put_front_period;
+use crate::components::*;
 use crate::icons::*;
 use crate::models::*;
-use crate::components::*;
+use crate::Route;
+use chrono::Local;
+use chrono::NaiveDate;
+use dioxus::prelude::*;
+use uuid::Uuid;
 
 #[component]
 pub fn EditFrontPeriod(id: Uuid) -> Element {
@@ -16,7 +16,16 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
     let mut show_select = use_signal(|| false);
 
     let front_periods = (db().front_periods)();
-    let fp = front_periods.get(&id).unwrap().clone();
+    let fp = front_periods
+        .get(&id)
+        .cloned()
+        .unwrap_or_else(|| FrontPeriod {
+            id,
+            started_at: Default::default(),
+            ended_at: Default::default(),
+            assignments: Default::default(),
+            note: Default::default(),
+        });
 
     let mut assignments = use_signal(|| fp.assignments.clone());
     let mut started_at = use_signal(|| fp.started_at.clone());
@@ -36,7 +45,13 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
         started_at.set(local_naive_to_utc(start_naive));
         ended_at.set(local_naive_to_utc(end_naive));
 
-        match put_front_period(fp.id, started_at(), ended_at(), assignments(), String::new()) {
+        match put_front_period(
+            fp.id,
+            started_at(),
+            ended_at(),
+            assignments(),
+            String::new(),
+        ) {
             Ok(_) => {}
             Err(err) => status_message.write().set_message(
                 format!("Error editing front period: {:#?}", err),
@@ -54,6 +69,13 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
 
     let remove_callback = move |i: usize| {
         assignments.remove(i);
+    };
+
+    let delete = move |_| {
+        let mut binding = db();
+        let mut write = binding.front_periods.write();
+        write.shift_remove(&id).unwrap();
+        navigator().go_back();
     };
 
     rsx! {
@@ -119,13 +141,28 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
 
             div { class: "flex flex-row justify-between w-full",
                 button { class: "btn", onclick: move |_| navigator().go_back(), "Cancel" }
-                button { class: "btn btn-primary", onclick: save, "Save" }
+                button { class: "btn btn-primary w-[5rem]", onclick: save, "Save" }
+            }
+            div { class: "flex flex-row justify-end w-full pt-4",
+                label { class: "btn btn-error w-[5rem]", r#for: "delete-warn", "Delete" }
             }
         }
 
         if show_select() {
             div { class: "w-screen h-full fixed inset-0 bg-base-100 z-1 m-0",
                 MemberList { db, on_click: add_member }
+            }
+        }
+
+        input { class: "modal-toggle", id: "delete-warn", r#type: "checkbox" }
+        div { class: "modal", role: "dialog",
+            div { class: "modal-box",
+                h3 { class: "text-lg font-bold", "Really delete switch event?" }
+                p { class: "py-4", "This action cannot be undone." }
+                div { class: "modal-action flex flex-row justify-between w-full",
+                    label { class: "btn", r#for: "delete-warn", "Cancel" }
+                    button { class: "btn btn-error", onclick: delete, "Delete" }
+                }
             }
         }
     }
