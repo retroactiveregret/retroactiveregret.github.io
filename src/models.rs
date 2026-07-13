@@ -320,6 +320,19 @@ pub struct FrontPeriodAssignment {
         deserialize_with = "deserialize_uuid_compat"
     )]
     pub member_id: Uuid,
+    pub front_role: FrontRole,
+    pub confidence: f64,
+    pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum FrontRole {
+    Primary,
+    CoFront,
+    CoCon,
+    Influencing,
+    Custom(String),
+    Unknown
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

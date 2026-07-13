@@ -63,7 +63,12 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
     };
 
     let add_member = move |id: Uuid| {
-        assignments.push(FrontPeriodAssignment { member_id: id });
+        assignments.push(FrontPeriodAssignment {
+            member_id: id,
+            front_role: FrontRole::Unknown,
+            confidence: 1.0,
+            note: String::new(),
+        });
         show_select.set(false);
     };
 
