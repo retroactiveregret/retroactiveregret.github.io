@@ -15,7 +15,7 @@ pub fn MemberAvatar(img_id: Option<Uuid>, size: usize) -> Element {
         },
         None => rsx! {
             Icon {
-                class: "rounded-box foreground neutral",
+                class: "rounded-box foreground bg-primary-content inset-ring-2 inset-ring-primary text-primary",
                 size: size * 4,
                 data: lucide::User,
                 stroke_width: 4,
