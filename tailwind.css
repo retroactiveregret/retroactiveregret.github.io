@@ -24,10 +24,6 @@
   color: var(--color-neutral-content);
 }
 
-/* .btn:not(.btn-primary):not(.btn-secondary):not(.btn-accent):not(.btn-success):not(.btn-warning):not(.btn-error):not(.btn-info):not(.btn-ghost) {
-  @apply bg-neutral text-neutral-content border-0;
-} */
-
 .btn {
   @apply border-0;
 }
@@ -40,6 +36,6 @@
   @apply rounded-box;
 }
 
-.fab>button {
+.fab>button:not(.btn-secondary) {
   @apply btn-primary;
 }

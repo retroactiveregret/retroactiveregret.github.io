@@ -1,15 +1,23 @@
-use crate::{Route, components::Markdown, icons::*, models::*};
+use crate::{Route, components::{Markdown, MemberAvatar}, icons::*, models::*, api::*};
+use chrono::Local;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
 #[component]
 pub fn JournalEntryView(
+    db: Signal<Database>,
     entry: JournalEntry,
     viewed_entry_id: Signal<Option<Uuid>>,
     date_entries: Memo<Option<Vec<Uuid>>>,
     viewed_position: Memo<Option<usize>>,
     show_post: Signal<bool>,
 ) -> Element {
+    let members = (db().members)();
+    let authors = entry.author_member_ids.iter().map(|id| members.get(id).unwrap()).collect::<Vec<_>>();
+
+    let time = entry.created_at.with_timezone(&Local).time();
+    let twelve_hour = (db().settings)().twelve_hour;
+
     rsx! {
         div { class: "m-4",
             div { class: "flex flex-row justify-between",
@@ -25,7 +33,25 @@ pub fn JournalEntryView(
                     Icon { data: material_symbols_light::ArrowBackIosRounded }
                 }
 
-                h1 { class: "text-center text-xl font-semibold", "{entry.title}" }
+                div {
+                    div { class: "flex flex-wrap gap-4 items-center",
+                        div { class: "flex flex-row gap-4",
+                            for member in authors {
+                                MemberAvatar { img_id: member.avatar_asset_id, size: 12 }
+                            }
+                        }
+                        if !entry.title.is_empty() {
+                            h1 { class: "text-center text-xl font-semibold", "{entry.title}" }
+                        } else {
+                            h1 { class: "text-center text-xl label", "Untitled" }
+                        }
+                    }
+                    div { class: "text-center w-full pt-2",
+                        h2 { class: "label text-xs uppercase",
+                            "{date_format(entry.created_at.date_naive())}, {time_format(time, twelve_hour)}"
+                        }
+                    }
+                }
 
                 button {
                     onclick: move |_| {
@@ -63,16 +89,13 @@ pub fn JournalEntryView(
                     }
                 }
             } else {
-                div { class: "mt-7",
-                    Markdown { text: "{entry.body}", class: "prose" }
+                div { class: "mt-7 flex flex-col",
+                    Markdown { text: "{entry.body}", class: "prose grow" }
                 }
             }
         }
-        div {
-            class: "fab bottom-20 left-6 right-auto",
-            tabindex: "0",
-            role: "button",
-            button { class: "btn w-12 h-12 p-0",
+        div { class: "fab bottom-34", tabindex: "0", role: "button",
+            button { class: "btn btn-secondary w-12 h-12 p-0",
                 Link { to: Route::JournalPost { id: entry.id },
                     Icon { size: 32, data: mdi_light::Pencil }
                 }

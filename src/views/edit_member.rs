@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{api::*, components::*, icons::*, models::*, Route};
+use crate::{api::*, components::*, models::*, Route};
 
 #[component]
 pub fn EditMember(id: Uuid) -> Element {
@@ -54,7 +52,7 @@ pub fn EditMember(id: Uuid) -> Element {
 
     let mut status_message = use_context::<Signal<Status>>();
 
-    let mut save_member = {
+    let save_member = {
         let member = member.clone();
 
         move |_| {

@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
 use crate::{api, components::*, models::*};
 use chrono::Utc;
 use dioxus::prelude::*;
-use uuid::Uuid;
 
 pub fn Dashboard() -> Element {
     let db = use_context::<Signal<Database>>();
@@ -20,7 +17,7 @@ pub fn Dashboard() -> Element {
             let mut new = assignments;
             new.remove(i);
             match api::switch(Utc::now(), new, String::new()) {
-                Ok(fp) => {}
+                Ok(_) => {}
                 Err(err) => status_message.write().set_message(
                     format!("Error removing member: {:#?}", err),
                     StatusLevel::Error,
@@ -28,7 +25,7 @@ pub fn Dashboard() -> Element {
             }
         } else {
             match api::end_current_period(Utc::now()) {
-                Ok(fp) => {}
+                Ok(_) => {}
                 Err(err) => status_message.write().set_message(
                     format!("Error removing member: {:#?}", err),
                     StatusLevel::Error,

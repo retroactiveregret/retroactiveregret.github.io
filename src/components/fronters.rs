@@ -1,6 +1,4 @@
-use chrono::Utc;
 use dioxus::prelude::*;
-use uuid::Uuid;
 
 use crate::{
     components::MemberAvatar,
@@ -22,8 +20,6 @@ pub fn Fronters(
         .filter_map(|assignment| members.get(&assignment.member_id))
         .cloned()
         .collect();
-
-    let fronters_len = fronters.len();
 
     rsx! {
         for (i , member) in fronters.iter().enumerate() {

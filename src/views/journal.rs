@@ -44,6 +44,7 @@ pub fn Journal() -> Element {
             match viewed_entry() {
                 Some(entry) => rsx! {
                     JournalEntryView {
+                        db,
                         entry,
                         viewed_entry_id,
                         date_entries,

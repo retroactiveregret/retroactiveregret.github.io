@@ -1,14 +1,11 @@
-use chrono::DateTime;
 use chrono::NaiveDate;
-use chrono::NaiveDateTime;
-use chrono::Utc;
 use chrono::Local;
-use chrono::TimeZone;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use crate::Route;
 use crate::api::local_naive_to_utc;
 use crate::api::put_front_period;
+use crate::api::time_format;
 use crate::icons::*;
 use crate::models::*;
 use crate::components::*;
@@ -16,6 +13,7 @@ use crate::components::*;
 #[component]
 pub fn EditFrontPeriod(id: Uuid) -> Element {
     let db = use_context::<Signal<Database>>();
+    let twelve_hour = (db().settings)().twelve_hour;
     let mut status_message = use_context::<Signal<Status>>();
     let mut show_select = use_signal(|| false);
 
@@ -33,7 +31,7 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
     let mut end_date_part = use_signal(|| ended_at().with_timezone(&Local).date_naive());
     let mut end_time_part = use_signal(|| ended_at().with_timezone(&Local).time());
 
-    let mut save = move |_| {
+    let save = move |_| {
         let start_naive = start_date_part().and_time(start_time_part());
         let end_naive = end_date_part().and_time(end_time_part());
 
@@ -93,7 +91,7 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
                     input {
                         class: "w-fit",
                         r#type: "time",
-                        value: start_time_part().format("%H:%M").to_string(),
+                        value: time_format(start_time_part(), twelve_hour),
                         oninput: move |evt| {
                             start_time_part
                                 .set(chrono::NaiveTime::parse_from_str(&evt.value(), "%H:%M").unwrap());
@@ -112,7 +110,7 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
                     input {
                         class: "w-fit",
                         r#type: "time",
-                        value: end_time_part().format("%H:%M").to_string(),
+                        value: time_format(end_time_part(), twelve_hour),
                         oninput: move |evt| {
                             end_time_part
                                 .set(chrono::NaiveTime::parse_from_str(&evt.value(), "%H:%M").unwrap());

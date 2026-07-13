@@ -18,11 +18,11 @@ pub fn CustomFields() -> Element {
     
     rsx! {
         div {
-            ul { class: "list",
-                li { class: "list-row",
-                    CustomFieldForm { db, name_input, on_click: save_field }
-                }
-
+            div { class: "p-4 pb-0 text-xs opacity-60 tracking-wide", "Custom Fields" }
+            div { class: "w-full",
+                CustomFieldForm { db, name_input, on_click: save_field }
+            }
+            ul { class: "list w-full",
                 for (i , (_ , field)) in (db().custom_fields)().iter().enumerate() {
                     li { class: "list-row w-full",
                         span { class: "list-col-grow", "{field.name}" }

@@ -16,7 +16,7 @@ pub fn JournalEntryEdit(
     let show_select = use_signal(|| false);
 
     rsx! {
-        div { class: "flex flex-col gap-4 h-full grow",
+        div { class: "flex flex-col gap-4 h-full grow p-7",
             div { class: "flex flex-row justify-between",
                 JournalEntryEditAuthorList { db, authors_input, show_select }
                 JournalEntryEditContentWarning {

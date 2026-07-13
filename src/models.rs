@@ -387,6 +387,7 @@ pub struct Settings {
     pub notification_banner: bool,
     pub front_history_show: usize,
     pub board_show: usize,
+    pub twelve_hour: bool,
 
     pub sanitize_html: bool,
     pub app_lock: Option<String>,
@@ -402,6 +403,7 @@ impl Default for Settings {
             notification_banner: true,
             front_history_show: 10,
             board_show: 10,
+            twelve_hour: true,
 
             sanitize_html: true,
             app_lock: None,

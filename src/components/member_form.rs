@@ -1,13 +1,11 @@
 use dioxus::{prelude::*, web::WebFileExt};
-use dioxus_primitives::color_picker::Color;
-use palette::{encoding, Hsv, IntoColor};
 use std::collections::HashMap;
 use uuid::Uuid;
 use web_sys::Blob;
 
 use crate::{
     api::{self, image_url},
-    components::{color_picker::ColorPicker, MemberAvatar},
+    components::MemberAvatar,
     icons::*,
     models::*,
 };
@@ -48,7 +46,7 @@ pub fn MemberForm(
                                     img { class: "w-full h-48 object-cover", src: image_url(banner) }
                                 },
                                 None => rsx! {
-                                    Icon { size: 24, data: mdi_light::Pencil }
+                                    Icon { class: "m-4", size: 24, data: mdi_light::Pencil }
                                 },
                             }
                         }

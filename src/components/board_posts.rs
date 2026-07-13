@@ -31,7 +31,7 @@ pub fn BoardPosts(db: Signal<Database>, status_message: Signal<Status>) -> Eleme
         pinned_input(),
         Utc::now(),
     ) {
-        Ok(post) => {
+        Ok(_) => {
             author_id_input.set(None);
             mentions_input.set(HashSet::<Uuid>::new());
             content_input.set(String::new());

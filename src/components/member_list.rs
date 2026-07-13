@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use indexmap::IndexMap;
 use uuid::Uuid;
 
 use crate::{api::image_url, components::MemberAvatar, models::*};

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, Duration, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use dioxus::{logger::tracing::info, prelude::*};
 use indexmap::IndexMap;
 use js_sys::Reflect;
@@ -592,6 +592,18 @@ pub fn local_naive_to_utc(naive: NaiveDateTime) -> DateTime<Utc> {
             }
         }
     }
+}
+
+pub fn time_format(time: NaiveTime, twelve_hour: bool) -> String {
+    if twelve_hour {
+        time.format("%I:%M %P").to_string()
+    } else {
+        time.format("%H:%M").to_string()
+    }
+}
+
+pub fn date_format(date: NaiveDate) -> String {
+    date.format("%x").to_string()
 }
 
 pub async fn request_persistent_storage() -> Result<bool, wasm_bindgen::JsValue> {

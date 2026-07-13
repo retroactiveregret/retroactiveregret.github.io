@@ -33,13 +33,15 @@ pub fn JournalPost(id: Uuid) -> Element {
     };
 
     rsx! {
-        div { class: "min-h-screen flex flex-col",
-            JournalEntryEdit {
-                db,
-                title_input,
-                body_input,
-                authors_input,
-                content_warning_input,
+        div { class: "min-h-screen flex flex-col gap-4",
+            div { class: "grow h-full",
+                JournalEntryEdit {
+                    db,
+                    title_input,
+                    body_input,
+                    authors_input,
+                    content_warning_input,
+                }
             }
 
             div { class: "flex flex-row justify-between m-7",
