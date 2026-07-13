@@ -3,7 +3,7 @@
 [web.app]
 
 # HTML title tag content
-title = "pwa"
+title = "Identi"
 
 # include `assets` in web platform
 [web.resource]
