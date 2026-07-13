@@ -82,6 +82,65 @@ pub fn Appearance() -> Element {
                     }
                 }
             }
+            li { class: "list-row gap-2",
+                p { class: "", "Dashboard board posts max" }
+                div { class: "list-col-wrap ",
+                    input {
+                        class: "input",
+                        r#type: "text",
+                        value: "{settings().board_show}",
+                        oninput: move |evt| {
+                            if let Ok(n) = evt
+                                .value()
+                                .chars()
+                                .filter(|c| c.is_ascii_digit())
+                                .collect::<String>()
+                                .parse::<usize>()
+                            {
+                                settings.write().board_show = n;
+                            }
+                        },
+                    }
+                }
+            }
+            li { class: "list-row gap-2",
+                p { class: "", "Dashboard front history max" }
+                div { class: "list-col-wrap ",
+                    input {
+                        class: "input",
+                        r#type: "text",
+                        value: "{settings().front_history_show}",
+                        oninput: move |evt| {
+                            if let Ok(n) = evt
+                                .value()
+                                .chars()
+                                .filter(|c| c.is_ascii_digit())
+                                .collect::<String>()
+                                .parse::<usize>()
+                            {
+                                settings.write().front_history_show = n;
+                            }
+                        },
+                    }
+                }
+            }
+            li { class: "list-row gap-2",
+                p { class: "", "Twelve hour time" }
+                div { class: "list-col-wrap ",
+                    input {
+                        class: "toggle",
+                        r#type: "checkbox",
+                        checked: settings().twelve_hour,
+                        oninput: move |evt| {
+                            if evt.value().parse().unwrap_or(false) {
+                                settings.write().twelve_hour = true;
+                            } else {
+                                settings.write().twelve_hour = false;
+                            }
+                        },
+                    }
+                }
+            }
         }
     }
 }
