@@ -335,6 +335,6 @@ fn Fullscreen() -> Element {
     rsx! {
         StatusMessage { message: status_message }
         NotificationPopup { db, status_message, user_mentions_lookup }
-        div { class: "", Outlet::<Route> {} }
+        div { class: "pt-[env(safe-area-inset-top)]", Outlet::<Route> {} }
     }
 }
