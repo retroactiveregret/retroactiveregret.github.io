@@ -272,7 +272,7 @@ fn Navbar() -> Element {
         StatusMessage { message: status_message }
         NotificationPopup { db, status_message, user_mentions_lookup }
 
-        div { class: "pb-[calc(5rem+env(safe-area-inset-bottom))]", Outlet::<Route> {} }
+        div { class: "pb-15 pt-[env(safe-area-inset-top)]", Outlet::<Route> {} }
 
         div { class: "dock foreground",
             span { class: "dock-label",
