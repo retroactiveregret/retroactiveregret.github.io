@@ -5,7 +5,6 @@ use uuid::Uuid;
 use crate::Route;
 use crate::api::local_naive_to_utc;
 use crate::api::put_front_period;
-use crate::api::time_format;
 use crate::icons::*;
 use crate::models::*;
 use crate::components::*;
@@ -13,7 +12,6 @@ use crate::components::*;
 #[component]
 pub fn EditFrontPeriod(id: Uuid) -> Element {
     let db = use_context::<Signal<Database>>();
-    let twelve_hour = (db().settings)().twelve_hour;
     let mut status_message = use_context::<Signal<Status>>();
     let mut show_select = use_signal(|| false);
 
