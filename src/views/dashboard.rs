@@ -39,12 +39,7 @@ pub fn Dashboard() -> Element {
             Switch { db, status_message }
             match active() {
                 Some(fp) => rsx! {
-                    Fronters {
-                        db,
-                        status_message,
-                        assignments: fp.assignments,
-                        remove_callback,
-                    }
+                    Fronters { db, status_message, fp }
                 },
                 None => rsx! {},
             }

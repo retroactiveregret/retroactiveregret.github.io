@@ -96,12 +96,7 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
                         }
                     }
                 }
-                Fronters {
-                    db,
-                    status_message,
-                    assignments: assignments(),
-                    remove_callback,
-                }
+                Fronters { db, status_message, fp }
             }
 
             div { class: "flex flex-row gap-2 grow",

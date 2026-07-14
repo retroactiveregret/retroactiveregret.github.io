@@ -14,6 +14,7 @@ pub mod custom_field_form;
 pub mod coming_soon;
 pub mod date_select;
 pub mod post;
+pub mod front_role_dropdown;
 
 pub use board_posts::BoardPosts;
 pub use front_history_list::FrontHistoryList;
@@ -31,6 +32,7 @@ pub use custom_field_form::CustomFieldForm;
 pub use coming_soon::ComingSoon;
 pub use date_select::DateSelect;
 pub use post::Post;
+pub use front_role_dropdown::FrontRoleDropdown;
 
 pub mod color_picker;
 pub mod input;

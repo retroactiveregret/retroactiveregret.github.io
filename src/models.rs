@@ -335,6 +335,33 @@ pub enum FrontRole {
     Unknown
 }
 
+impl ToString for FrontRole {
+    fn to_string(&self) -> String {
+        match self {
+            FrontRole::Primary => "primary",
+            FrontRole::CoFront => "cofront",
+            FrontRole::CoCon => "cocon",
+            FrontRole::Influencing => "influencing",
+            FrontRole::Custom(s) => s,
+            FrontRole::Unknown => "unknown",
+        }.into()
+    }
+}
+
+impl From<String> for FrontRole {
+    fn from(string: String) -> Self {
+        let s = string.as_str();
+        match s {
+            "primary" => Self::Primary,
+            "cofront" => Self::CoFront, 
+            "cocon" => Self::CoCon,
+            "influencing" => Self::Influencing,
+            "unknown" => Self::Unknown,
+            s => Self::Custom(s.into())
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct JournalEntry {
     #[serde(
