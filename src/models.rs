@@ -310,7 +310,6 @@ pub struct FrontPeriod {
     pub started_at: DateTime<Utc>,
     pub ended_at: Option<DateTime<Utc>>,
     pub assignments: Vec<FrontPeriodAssignment>,
-    pub note: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -320,18 +319,27 @@ pub struct FrontPeriodAssignment {
         deserialize_with = "deserialize_uuid_compat"
     )]
     pub member_id: Uuid,
+    #[serde(default)]
     pub front_role: FrontRole,
+    #[serde(default = "default_confidence")]
     pub confidence: f64,
+    #[serde(default)]
     pub note: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+fn default_confidence() -> f64 {
+    1.0
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum FrontRole {
     Primary,
     CoFront,
     CoCon,
     Influencing,
     Custom(String),
+
+    #[default]
     Unknown
 }
 

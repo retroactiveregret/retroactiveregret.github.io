@@ -11,29 +11,6 @@ pub fn Dashboard() -> Element {
     });
     info!("Active: {:#?}", active());
 
-    let remove_callback = move |i: usize| {
-        let assignments = active.unwrap().assignments;
-        if assignments.len() > 1 {
-            let mut new = assignments;
-            new.remove(i);
-            match api::switch(Utc::now(), new, String::new()) {
-                Ok(_) => {}
-                Err(err) => status_message.write().set_message(
-                    format!("Error removing member: {:#?}", err),
-                    StatusLevel::Error,
-                ),
-            }
-        } else {
-            match api::end_current_period(Utc::now()) {
-                Ok(_) => {}
-                Err(err) => status_message.write().set_message(
-                    format!("Error removing member: {:#?}", err),
-                    StatusLevel::Error,
-                ),
-            }
-        }
-    };
-
     rsx! {
         div { class: "flex flex-row gap-4 p-4 overflow-x-scroll",
             Switch { db, status_message }

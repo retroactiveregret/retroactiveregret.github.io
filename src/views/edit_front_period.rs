@@ -24,7 +24,6 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
             started_at: Default::default(),
             ended_at: Default::default(),
             assignments: Default::default(),
-            note: Default::default(),
         });
 
     let mut assignments = use_signal(|| fp.assignments.clone());
@@ -70,10 +69,6 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
             note: String::new(),
         });
         show_select.set(false);
-    };
-
-    let remove_callback = move |i: usize| {
-        assignments.remove(i);
     };
 
     let delete = move |_| {
@@ -140,11 +135,8 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
             }
 
             div { class: "flex flex-row justify-between w-full",
-                button { class: "btn", onclick: move |_| navigator().go_back(), "Cancel" }
-                button { class: "btn btn-primary w-[5rem]", onclick: save, "Save" }
-            }
-            div { class: "flex flex-row justify-end w-full pt-4",
                 label { class: "btn btn-error w-[5rem]", r#for: "delete-warn", "Delete" }
+                button { class: "btn btn-primary w-[5rem]", onclick: save, "Save" }
             }
         }
 

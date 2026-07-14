@@ -72,7 +72,6 @@ pub fn add_period(
     started_at: DateTime<Utc>,
     ended_at: Option<DateTime<Utc>>,
     assignments: Vec<FrontPeriodAssignment>,
-    note: String,
 ) -> Result<FrontPeriod, JsValue> {
     info!("Adding new fronting period");
     let db = use_context::<Signal<Database>>();
@@ -81,7 +80,6 @@ pub fn add_period(
         started_at,
         ended_at,
         assignments,
-        note,
     };
     db().front_periods.write().insert(fp.id, fp.clone());
     Ok(fp)
@@ -90,7 +88,6 @@ pub fn add_period(
 pub fn switch(
     time: DateTime<Utc>,
     assignments: Vec<FrontPeriodAssignment>,
-    note: String,
 ) -> Result<FrontPeriod, JsValue> {
     info!("Switching");
     let db = use_context::<Signal<Database>>();
@@ -100,7 +97,6 @@ pub fn switch(
         let delta = (time - fp.started_at).num_seconds();
         if fp.ended_at.is_none() && delta >= 0 && delta < 20 {
             fp.assignments = assignments;
-            fp.note = note;
             return Ok(fp.to_owned());
         }
 
@@ -114,7 +110,6 @@ pub fn switch(
         started_at: time,
         ended_at: None,
         assignments,
-        note,
     };
     write.insert(fp.id, fp.clone());
     Ok(fp)
@@ -151,7 +146,6 @@ pub fn put_front_period(
                         started_at: p.started_at,
                         ended_at: Some(started_at),
                         assignments: p.assignments,
-                        note: p.note,
                     }
                 }
             }
@@ -175,7 +169,6 @@ pub fn put_front_period(
                         started_at: ended_at,
                         ended_at: n.ended_at,
                         assignments: n.assignments,
-                        note: n.note,
                     }
                 }
             }
@@ -190,7 +183,6 @@ pub fn put_front_period(
             started_at,
             ended_at: Some(ended_at),
             assignments,
-            note,
         };
     }
 

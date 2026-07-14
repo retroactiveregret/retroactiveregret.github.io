@@ -16,7 +16,7 @@ pub fn Switch(db: Signal<Database>, status_message: Signal<Status>) -> Element {
             confidence: 1.0,
             note: String::new(),
         }];
-        match switch(Utc::now(), assignments, String::new()) {
+        match switch(Utc::now(), assignments) {
             Ok(_) => {}
             Err(err) => status_message.write().set_message(
                 format!("Error adding member: {:#?}", err),
@@ -45,7 +45,7 @@ pub fn Switch(db: Signal<Database>, status_message: Signal<Status>) -> Element {
                 note: String::new(),
             }],
         };
-        match switch(Utc::now(), assignments, String::new()) {
+        match switch(Utc::now(), assignments) {
             Ok(_) => {}
             Err(err) => status_message.write().set_message(
                 format!("Error adding member: {:#?}", err),
