@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use uuid::Uuid;
 use crate::{Route, components::MemberAvatar, models::*};
 
 #[component]

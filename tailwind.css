@@ -39,3 +39,7 @@
 .fab>button:not(.btn-secondary) {
   @apply btn-primary;
 }
+
+.fab {
+  margin-bottom: env(safe-area-inset-bottom)
+}

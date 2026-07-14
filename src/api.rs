@@ -120,7 +120,6 @@ pub fn put_front_period(
     started_at: DateTime<Utc>,
     ended_at: DateTime<Utc>,
     assignments: Vec<FrontPeriodAssignment>,
-    note: String,
 ) -> Result<(), JsValue> {
     if started_at > ended_at {
         return Err(JsValue::from_str("End time must be after start time"));

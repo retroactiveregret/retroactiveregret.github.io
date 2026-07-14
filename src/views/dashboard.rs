@@ -1,10 +1,9 @@
-use crate::{api, components::*, models::*};
-use chrono::Utc;
+use crate::{components::*, models::*};
 use dioxus::prelude::*;
 
 pub fn Dashboard() -> Element {
     let db = use_context::<Signal<Database>>();
-    let mut status_message = use_context::<Signal<Status>>();
+    let status_message = use_context::<Signal<Status>>();
     let active = use_memo(move || {
         info!("Memo");
         db().get_active_period()

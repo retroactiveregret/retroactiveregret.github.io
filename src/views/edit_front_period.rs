@@ -49,7 +49,6 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
             started_at(),
             ended_at(),
             assignments(),
-            String::new(),
         ) {
             Ok(_) => {}
             Err(err) => status_message.write().set_message(
