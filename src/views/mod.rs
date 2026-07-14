@@ -25,5 +25,8 @@ pub use notifications::Notifications;
 pub mod edit_front_period;
 pub use edit_front_period::EditFrontPeriod;
 
+pub mod edit_front_assignment;
+pub use edit_front_assignment::EditFrontAssignment;
+
 pub mod options;
 pub use options::*;

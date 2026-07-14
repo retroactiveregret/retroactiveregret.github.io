@@ -1,6 +1,5 @@
-use chrono::{DateTime, Duration, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
+use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use dioxus::{logger::tracing::info, prelude::*};
-use indexmap::IndexMap;
 use js_sys::Reflect;
 use palette::Srgb;
 use serde::Deserialize;
@@ -73,7 +72,6 @@ pub fn add_period(
     started_at: DateTime<Utc>,
     ended_at: Option<DateTime<Utc>>,
     assignments: Vec<FrontPeriodAssignment>,
-    note: String,
 ) -> Result<FrontPeriod, JsValue> {
     info!("Adding new fronting period");
     let db = use_context::<Signal<Database>>();
@@ -82,7 +80,6 @@ pub fn add_period(
         started_at,
         ended_at,
         assignments,
-        note,
     };
     db().front_periods.write().insert(fp.id, fp.clone());
     Ok(fp)
@@ -91,7 +88,6 @@ pub fn add_period(
 pub fn switch(
     time: DateTime<Utc>,
     assignments: Vec<FrontPeriodAssignment>,
-    note: String,
 ) -> Result<FrontPeriod, JsValue> {
     info!("Switching");
     let db = use_context::<Signal<Database>>();
@@ -101,7 +97,6 @@ pub fn switch(
         let delta = (time - fp.started_at).num_seconds();
         if fp.ended_at.is_none() && delta >= 0 && delta < 20 {
             fp.assignments = assignments;
-            fp.note = note;
             return Ok(fp.to_owned());
         }
 
@@ -115,7 +110,6 @@ pub fn switch(
         started_at: time,
         ended_at: None,
         assignments,
-        note,
     };
     write.insert(fp.id, fp.clone());
     Ok(fp)
@@ -152,7 +146,6 @@ pub fn put_front_period(
                         started_at: p.started_at,
                         ended_at: Some(started_at),
                         assignments: p.assignments,
-                        note: p.note,
                     }
                 }
             }
@@ -176,7 +169,6 @@ pub fn put_front_period(
                         started_at: ended_at,
                         ended_at: n.ended_at,
                         assignments: n.assignments,
-                        note: n.note,
                     }
                 }
             }
@@ -191,7 +183,6 @@ pub fn put_front_period(
             started_at,
             ended_at: Some(ended_at),
             assignments,
-            note,
         };
     }
 
@@ -384,198 +375,6 @@ pub fn image_url(id: Uuid) -> String {
 
 fn not_rand(start: usize, end: usize, seed: usize) -> usize {
     (start + seed) % end
-}
-
-pub async fn gen_dummy_db(
-    n_members: usize,
-    n_switches: usize,
-    n_board_posts: usize,
-    n_journals: usize,
-    n_custom_fields: usize,
-) -> Result<DatabaseState, JsValue> {
-    info!("Generating dummy data");
-    let base_time = Utc::now();
-
-    let mut next_id: u128 = 1;
-    let mut gen_uuid = move || {
-        let id = Uuid::from_u128(next_id);
-        next_id += 1;
-        id
-    };
-
-    let mut members: IndexMap<Uuid, Member> = IndexMap::new();
-    let member_ids: Vec<Uuid> = (0..n_members)
-        .map(|i| {
-            let id = gen_uuid();
-            members.insert(
-                id,
-                Member {
-                    id,
-                    name: format!("Member {i}"),
-                    description: String::new(),
-                    color: None,
-                    avatar_asset_id: None,
-                    banner_asset_id: None,
-                    archived: false,
-                    created_at: base_time,
-                },
-            );
-            id
-        })
-        .collect();
-
-    let mut custom_fields: IndexMap<Uuid, CustomField> = IndexMap::new();
-    let field_ids: Vec<Uuid> = (0..n_custom_fields)
-        .map(|i| {
-            let id = gen_uuid();
-            custom_fields.insert(
-                id,
-                CustomField {
-                    id,
-                    name: format!("Field {i}"),
-                    field_type: FieldType::Text,
-                },
-            );
-            id
-        })
-        .collect();
-
-    let mut custom_field_values: Vec<CustomFieldValue> = Vec::new();
-    for (i, &field_id) in field_ids.iter().enumerate() {
-        for &member_id in &member_ids {
-            custom_field_values.push(CustomFieldValue {
-                field_id,
-                member_id,
-                value: Value::Text(format!("Value {i}")),
-            });
-        }
-    }
-
-    let mut front_periods: IndexMap<Uuid, FrontPeriod> = IndexMap::new();
-    if n_switches > 0 && n_members > 0 {
-        let mut period_start = base_time - Duration::hours(n_switches as i64);
-        let cap = n_members.min(3).max(1);
-
-        for i in 0..n_switches {
-            let id = gen_uuid();
-            let period_end = period_start + Duration::hours(1);
-
-            let assignment_count = (i % cap) + 1;
-            let assignments: Vec<FrontPeriodAssignment> = (0..assignment_count)
-                .map(|j| FrontPeriodAssignment {
-                    member_id: member_ids[(i + j) % n_members],
-                })
-                .collect();
-
-            front_periods.insert(
-                id,
-                FrontPeriod {
-                    id,
-                    started_at: period_start,
-                    ended_at: Some(period_end),
-                    assignments,
-                    note: String::new(),
-                },
-            );
-
-            period_start = period_end;
-        }
-
-        if let Some((_, last)) = front_periods.iter_mut().last() {
-            last.ended_at = None;
-        }
-    }
-
-    let mut journal_entries: IndexMap<Uuid, JournalEntry> = IndexMap::new();
-    for i in 0..n_journals {
-        let id = gen_uuid();
-        let created_at = base_time - Duration::hours((n_journals - i) as i64);
-
-        let author_count = if n_members > 0 {
-            (i % n_members.min(3).max(1)) + 1
-        } else {
-            0
-        };
-        let author_member_ids: Vec<Uuid> = (0..author_count)
-            .map(|j| member_ids[(i + j) % n_members])
-            .collect();
-
-        journal_entries.insert(
-            id,
-            JournalEntry {
-                id,
-                title: String::new(),
-                body: String::new(),
-                created_at,
-                updated_at: None,
-                author_member_ids,
-                content_warning: None,
-            },
-        );
-    }
-
-    let mut board_posts: IndexMap<Uuid, BoardPost> = IndexMap::new();
-    let mut user_mentions: IndexMap<Uuid, UserMention> = IndexMap::new();
-    for i in 0..n_board_posts {
-        let id = gen_uuid();
-        let created_at = base_time - Duration::hours((n_board_posts - i) as i64);
-
-        let author_id = if n_members > 0 {
-            Some(member_ids[i % n_members])
-        } else {
-            None
-        };
-
-        let mention_count = if n_members > 0 {
-            i % n_members.min(3).max(1)
-        } else {
-            0
-        };
-        let mentions: HashSet<Uuid> = (0..mention_count)
-            .map(|j| member_ids[(i + j + 1) % n_members])
-            .collect();
-
-        for &mentioned_member in &mentions {
-            let mention_id = gen_uuid();
-            user_mentions.insert(
-                mention_id,
-                UserMention {
-                    id: mention_id,
-                    user_id: mentioned_member,
-                    board_post_id: id,
-                    read: i % 2 == 0,
-                },
-            );
-        }
-
-        board_posts.insert(
-            id,
-            BoardPost {
-                id,
-                author_id,
-                mentions,
-                content: String::new(),
-                pinned: false,
-                archived: i % 3 == 0,
-                created_at,
-            },
-        );
-    }
-
-    info!("Dummy generation done");
-
-    Ok(DatabaseState {
-        members,
-        taxonomy_terms: IndexMap::new(),
-        taxonomy_assignments: IndexMap::new(),
-        custom_fields,
-        custom_field_values,
-        front_periods,
-        journal_entries,
-        board_posts,
-        user_mentions,
-        ..Default::default()
-    })
 }
 
 pub fn local_naive_to_utc(naive: NaiveDateTime) -> DateTime<Utc> {

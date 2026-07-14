@@ -310,7 +310,6 @@ pub struct FrontPeriod {
     pub started_at: DateTime<Utc>,
     pub ended_at: Option<DateTime<Utc>>,
     pub assignments: Vec<FrontPeriodAssignment>,
-    pub note: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -320,6 +319,55 @@ pub struct FrontPeriodAssignment {
         deserialize_with = "deserialize_uuid_compat"
     )]
     pub member_id: Uuid,
+    #[serde(default)]
+    pub front_role: FrontRole,
+    #[serde(default = "default_confidence")]
+    pub confidence: f64,
+    #[serde(default)]
+    pub note: String,
+}
+
+fn default_confidence() -> f64 {
+    1.0
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum FrontRole {
+    Primary,
+    CoFront,
+    CoCon,
+    Influencing,
+    Custom(String),
+
+    #[default]
+    Unknown
+}
+
+impl ToString for FrontRole {
+    fn to_string(&self) -> String {
+        match self {
+            FrontRole::Primary => "primary",
+            FrontRole::CoFront => "cofront",
+            FrontRole::CoCon => "cocon",
+            FrontRole::Influencing => "influencing",
+            FrontRole::Custom(s) => s,
+            FrontRole::Unknown => "unknown",
+        }.into()
+    }
+}
+
+impl From<String> for FrontRole {
+    fn from(string: String) -> Self {
+        let s = string.as_str();
+        match s {
+            "primary" => Self::Primary,
+            "cofront" => Self::CoFront, 
+            "cocon" => Self::CoCon,
+            "influencing" => Self::Influencing,
+            "unknown" => Self::Unknown,
+            s => Self::Custom(s.into())
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

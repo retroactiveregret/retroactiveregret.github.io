@@ -69,7 +69,9 @@ enum Route {
         #[route("/journal/new")]
         AddJournalEntry {},
         #[route("/front_period/:id")]
-        EditFrontPeriod { id: Uuid }
+        EditFrontPeriod { id: Uuid },
+        #[route("/front_period/:event_id/:member_id")]
+        EditFrontAssignment { event_id: Uuid, member_id: Uuid }
 }
 
 #[component]

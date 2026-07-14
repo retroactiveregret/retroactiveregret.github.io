@@ -2,12 +2,7 @@ use chrono::Utc;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{
-    api::switch,
-    components::MemberList,
-    icons::*,
-    models::*,
-};
+use crate::{api::switch, components::MemberList, icons::*, models::*};
 
 #[component]
 pub fn Switch(db: Signal<Database>, status_message: Signal<Status>) -> Element {
@@ -15,8 +10,13 @@ pub fn Switch(db: Signal<Database>, status_message: Signal<Status>) -> Element {
     let mut show_select_add = use_signal(|| false);
 
     let swap_on_click = move |uuid: Uuid| {
-        let assignments = vec![FrontPeriodAssignment { member_id: uuid }];
-        match switch(Utc::now(), assignments, String::new()) {
+        let assignments = vec![FrontPeriodAssignment {
+            member_id: uuid,
+            front_role: FrontRole::Unknown,
+            confidence: 1.0,
+            note: String::new(),
+        }];
+        match switch(Utc::now(), assignments) {
             Ok(_) => {}
             Err(err) => status_message.write().set_message(
                 format!("Error adding member: {:#?}", err),
@@ -30,12 +30,22 @@ pub fn Switch(db: Signal<Database>, status_message: Signal<Status>) -> Element {
         let assignments = match db().get_active_period() {
             Some(active) => {
                 let mut new = active.assignments.clone();
-                new.push(FrontPeriodAssignment { member_id: uuid });
+                new.push(FrontPeriodAssignment {
+                    member_id: uuid,
+                    front_role: FrontRole::Unknown,
+                    confidence: 1.0,
+                    note: String::new(),
+                });
                 new
             }
-            None => vec![FrontPeriodAssignment { member_id: uuid }],
+            None => vec![FrontPeriodAssignment {
+                member_id: uuid,
+                front_role: FrontRole::Unknown,
+                confidence: 1.0,
+                note: String::new(),
+            }],
         };
-        match switch(Utc::now(), assignments, String::new()) {
+        match switch(Utc::now(), assignments) {
             Ok(_) => {}
             Err(err) => status_message.write().set_message(
                 format!("Error adding member: {:#?}", err),
