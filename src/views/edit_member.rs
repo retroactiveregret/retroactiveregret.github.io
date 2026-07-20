@@ -78,6 +78,7 @@ pub fn EditMember(id: Uuid) -> Element {
                 banner_asset_id: banner,
                 archived: false,
                 created_at: member.created_at,
+                subsystem: member.subsystem,
             };
 
             match put_member(&edited_member) {

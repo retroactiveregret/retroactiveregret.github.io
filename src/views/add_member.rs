@@ -37,7 +37,7 @@ pub fn AddMember() -> Element {
             }
 
             spawn(async move {
-                match add_member(name, description, None, avatar_id(), banner_id()) {
+                match add_member(name, description, None, avatar_id(), banner_id(), None) {
                     Ok(member) => {
                         let custom: Vec<CustomFieldValue> = custom_field_inputs
                             .iter()

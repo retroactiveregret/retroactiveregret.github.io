@@ -1,19 +1,23 @@
+use crate::{components::MemberAvatar, models::*, Route};
 use dioxus::prelude::*;
-use crate::{Route, components::MemberAvatar, models::*};
 
 #[component]
-pub fn Fronters(
-    db: Signal<Database>,
-    status_message: Signal<Status>,
-    fp: FrontPeriod,
-) -> Element {
-    let db = db();
-    let members = db.members.read();
+pub fn Fronters(db: Signal<Database>, status_message: Signal<Status>, fp: FrontPeriod) -> Element {
+    let binding = db();
+    let members = binding.members.read();
+    let subsystems = binding.subsystems.read();
 
-    let fronters: Vec<Member> = fp.assignments
+    let fronters: Vec<Member> = fp
+        .assignments
         .iter()
-        .filter_map(|assignment| members.get(&assignment.member_id))
-        .cloned()
+        .filter_map(|assignment| {
+            members.get(&assignment.member_id).cloned().or(Some(
+                subsystems
+                    .get(&assignment.member_id)
+                    .unwrap()
+                    .to_member(db()),
+            ))
+        })
         .collect();
 
     rsx! {

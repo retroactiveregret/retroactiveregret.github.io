@@ -17,6 +17,7 @@ pub fn add_member(
     color: Option<Srgb<u8>>,
     avatar_asset_id: Option<Uuid>,
     banner_asset_id: Option<Uuid>,
+    subsystem: Option<Uuid>,
 ) -> Result<Member, JsValue> {
     info!("Adding member");
     let db = use_context::<Signal<Database>>();
@@ -29,6 +30,7 @@ pub fn add_member(
         banner_asset_id,
         archived: false,
         created_at: chrono::offset::Utc::now(),
+        subsystem
     };
     db().members.write().insert(member.id, member.clone());
     Ok(member)

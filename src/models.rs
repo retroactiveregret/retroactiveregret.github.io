@@ -49,6 +49,9 @@ where
 #[derive(Debug, PartialEq, Clone)]
 pub struct Database {
     pub members: Signal<IndexMap<Uuid, Member>>,
+    pub subsystems: Signal<IndexMap<Uuid, Subsystem>>,
+    pub subsystem_assignments: Signal<IndexMap<Uuid, SubsystemAssignment>>,
+    pub subsystem_front_periods: Signal<IndexMap<Uuid, IndexMap<Uuid, FrontPeriod>>>,
     pub taxonomy_terms: Signal<IndexMap<Uuid, TaxonomyTerm>>,
     pub taxonomy_assignments: Signal<IndexMap<Uuid, TaxonomyAssignment>>,
     pub custom_fields: Signal<IndexMap<Uuid, CustomField>>,
@@ -63,6 +66,9 @@ pub struct Database {
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DatabaseState {
     pub members: IndexMap<Uuid, Member>,
+    pub subsystems: IndexMap<Uuid, Subsystem>,
+    pub subsystem_assignments: IndexMap<Uuid, SubsystemAssignment>,
+    pub subsystem_front_periods: IndexMap<Uuid, IndexMap<Uuid, FrontPeriod>>,
     pub taxonomy_terms: IndexMap<Uuid, TaxonomyTerm>,
     pub taxonomy_assignments: IndexMap<Uuid, TaxonomyAssignment>,
     pub custom_fields: IndexMap<Uuid, CustomField>,
@@ -78,6 +84,9 @@ impl From<Database> for DatabaseState {
     fn from(value: Database) -> Self {
         Self {
             members: (value.members)(),
+            subsystems: (value.subsystems)(),
+            subsystem_assignments: (value.subsystem_assignments)(),
+            subsystem_front_periods: (value.subsystem_front_periods)(),
             taxonomy_terms: (value.taxonomy_terms)(),
             taxonomy_assignments: (value.taxonomy_assignments)(),
             custom_fields: (value.custom_fields)(),
@@ -95,6 +104,9 @@ impl From<DatabaseState> for Database {
     fn from(value: DatabaseState) -> Self {
         Self {
             members: Signal::new(value.members),
+            subsystems: Signal::new(value.subsystems),
+            subsystem_assignments: Signal::new(value.subsystem_assignments),
+            subsystem_front_periods: Signal::new(value.subsystem_front_periods),
             taxonomy_terms: Signal::new(value.taxonomy_terms),
             taxonomy_assignments: Signal::new(value.taxonomy_assignments),
             custom_fields: Signal::new(value.custom_fields),
@@ -112,6 +124,9 @@ impl Default for DatabaseState {
     fn default() -> Self {
         Self {
             members: Default::default(),
+            subsystems: Default::default(),
+            subsystem_assignments: Default::default(),
+            subsystem_front_periods: Default::default(),
             taxonomy_terms: Default::default(),
             taxonomy_assignments: Default::default(),
             custom_fields: Default::default(),
@@ -129,6 +144,9 @@ impl Default for Database {
     fn default() -> Self {
         Self {
             members: Default::default(),
+            subsystems: Default::default(),
+            subsystem_assignments: Default::default(),
+            subsystem_front_periods: Default::default(),
             taxonomy_terms: Default::default(),
             taxonomy_assignments: Default::default(),
             custom_fields: Default::default(),
@@ -149,6 +167,23 @@ impl Database {
 
     pub fn get_active_period(&self) -> Option<FrontPeriod> {
         if let Some((_, fp)) = self.front_periods.read().last() {
+            match &fp.ended_at {
+                None => {
+                    info!("Active period: {:#?}", fp);
+                    Some(fp.clone())
+                }
+                Some(_) => {
+                    info!("No active period");
+                    None
+                }
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn get_active_subsystem_period(&self, id: Uuid) -> Option<FrontPeriod> {
+        if let Some((_, fp)) = self.subsystem_front_periods.read().get(&id).and_then(|f| f.last()) {
             match &fp.ended_at {
                 None => {
                     info!("Active period: {:#?}", fp);
@@ -232,6 +267,52 @@ pub struct Member {
     pub archived: bool,
     #[serde(default = "default_created_at")]
     pub created_at: DateTime<Utc>,
+    pub subsystem: Option<Uuid>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct Subsystem {
+    #[serde(
+        serialize_with = "serialize_uuid_compat",
+        deserialize_with = "deserialize_uuid_compat"
+    )]
+    pub id: Uuid,
+    #[serde(
+        serialize_with = "serialize_uuid_compat",
+        deserialize_with = "deserialize_uuid_compat"
+    )]
+    pub default_member_id: Uuid,
+}
+
+impl Subsystem {
+    pub fn to_member(&self, db: Database) -> Member {
+        let active = db.get_active_subsystem_period(self.id);
+        let members = db.members.read();
+        match active {
+            Some(fp) => {
+                let primary_id = match fp.assignments.iter().filter(|m| m.front_role == FrontRole::Primary).next() {
+                    Some(a) => a.member_id,
+                    None => fp.assignments.first().unwrap().member_id
+                };
+                members.get(&primary_id).unwrap().to_owned()
+            },
+            None => members.get(&self.default_member_id).unwrap().to_owned(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct SubsystemAssignment {
+    #[serde(
+        serialize_with = "serialize_uuid_compat",
+        deserialize_with = "deserialize_uuid_compat"
+    )]
+    pub subsystem_id: Uuid,
+    #[serde(
+        serialize_with = "serialize_uuid_compat",
+        deserialize_with = "deserialize_uuid_compat"
+    )]
+    pub member_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
