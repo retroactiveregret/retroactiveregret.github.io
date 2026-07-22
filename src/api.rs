@@ -343,10 +343,11 @@ struct ImageUploadResponse {
 
 pub async fn upload(blob: Blob) -> Result<Uuid, JsValue> {
     info!("Blob size {}", blob.size());
+    let buffer = JsFuture::from(blob.array_buffer()).await?;
+
     let init = RequestInit::new();
     init.set_method("POST");
-    init.set_body(&JsValue::from(blob));
-    init.set_mode(RequestMode::SameOrigin);
+    init.set_body(&buffer);
 
     let request = Request::new_with_str_and_init("/files", &init)?;
     let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window object"))?;
