@@ -1,5 +1,4 @@
 use crate::{
-    api::{file_url, upload},
     models::*,
 };
 use chrono::Utc;
@@ -12,9 +11,13 @@ pub fn DownloadButton(db: Signal<Database>, status_message: Signal<Status>) -> E
     let href_res = use_resource(move || async move {
         let db_state: DatabaseState = db().into();
         let json = serde_json::to_string_pretty(&db_state).unwrap();
-        let blob = Blob::from(JsValue::from_str(&json));
-        let id = upload(blob).await.unwrap();
-        file_url(id)
+
+        let parts = js_sys::Array::new();
+        parts.push(&JsValue::from_str(&json));
+
+        let blob = Blob::new_with_str_sequence(&parts).unwrap();
+
+        web_sys::Url::create_object_url_with_blob(&blob).unwrap()
     });
 
     match &*href_res.read_unchecked() {
