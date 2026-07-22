@@ -22,6 +22,9 @@
   <link data-trunk rel="copy-file" href="manifest.json" />
   <link data-trunk rel="copy-file" href="sw.js" />
 
+  <link data-trunk rel="copy-file" href="node_modules/eruda/eruda.js" />
+  <script src="/eruda.js"></script>
+
   <title>Identi</title>
 </head>
 
@@ -29,9 +32,26 @@
   <div id="main"></div>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.log("serviceWorker found");
+      navigator.serviceWorker.register("/sw.js", {
+        type: "module",
+      }).catch((err) => {
         console.warn('Service worker registration failed:', err);
       });
+
+      navigator.serviceWorker.ready.then(() => {
+        console.log("SW ready");
+
+        navigator.serviceWorker.addEventListener("message", (event) => {
+          if (event.data?.type !== "__SW_LOG__") return;
+
+          (console[event.data.level] || console.log)(
+            `[SW] ${event.data.message}`
+          );
+        });
+      });
+    } else {
+      console.warn("serviceWorker not in navigator");
     }
   </script>
 </body>

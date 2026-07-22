@@ -32,6 +32,24 @@ pub fn Security() -> Element {
                     }
                 }
             }
+
+            li { class: "list-row gap-2",
+                p { class: "", "Enable developer tools" }
+                div { class: "list-col-wrap ",
+                    input {
+                        class: "toggle",
+                        r#type: "checkbox",
+                        checked: settings().dev_tools,
+                        oninput: move |evt| {
+                            if evt.value().parse().unwrap_or(false) {
+                                settings.write().dev_tools = true;
+                            } else {
+                                settings.write().dev_tools = false;
+                            }
+                        },
+                    }
+                }
+            }
         }
 
         input { class: "modal-toggle", id: "warning-modal", r#type: "checkbox" }

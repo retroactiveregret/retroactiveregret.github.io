@@ -21,6 +21,59 @@ const MIGRATION_FLAG_KEY = 'migrated_from_dioxus_app_images_db'
 
 const PRECACHE_URLS = ['/', '/index.html']
 
+const DEV =
+  self.location.hostname === "localhost" ||
+  self.location.hostname === "127.0.0.1";
+
+function format(arg) {
+  if (arg instanceof Error) {
+    return `${arg.name}: ${arg.message}`;
+  }
+
+  if (arg instanceof Request) {
+    return `${arg.method} ${arg.url}`;
+  }
+
+  if (arg instanceof Response) {
+    return `Response ${arg.status} ${arg.statusText}`;
+  }
+
+  if (typeof arg === "object" && arg !== null) {
+    try {
+      return JSON.stringify(arg);
+    } catch {
+      return String(arg);
+    }
+  }
+
+  return String(arg);
+}
+
+async function log(level, ...args) {
+  const message = args.map(format).join(" ");
+
+  const clients = await self.clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+
+  for (const client of clients) {
+    client.postMessage({
+      type: "__SW_LOG__",
+      level,
+      message,
+    });
+  }
+}
+
+export const logger = {
+  log: (...args) => log("log", ...args),
+  warn: (...args) => log("warn", ...args),
+  error: (...args) => log("error", ...args),
+};
+
+logger.log("Loading");
+
 function requestPromise (request) {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result)
@@ -37,6 +90,7 @@ function waitForTransaction (tx) {
 }
 
 function openFileDb () {
+  logger.log("Opening file DB");
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(FILE_DB_NAME, FILE_DB_VERSION)
 
@@ -80,6 +134,7 @@ async function openLegacyDbIfExists () {
 }
 
 async function saveFileRecord (id, blob, contentType) {
+  logger.log("Saving file record");
   const db = await openFileDb()
   const tx = db.transaction([FILE_STORE], 'readwrite')
   const store = tx.objectStore(FILE_STORE)
@@ -89,6 +144,7 @@ async function saveFileRecord (id, blob, contentType) {
 }
 
 async function loadFileRecord (id) {
+  logger.log("Loading file record");
   const db = await openFileDb()
   const tx = db.transaction([FILE_STORE], 'readonly')
   const store = tx.objectStore(FILE_STORE)
@@ -164,7 +220,7 @@ async function migrateLegacyImagesIfNeeded () {
 
   await setMigrationFlag(fileDb)
   fileDb.close()
-  console.log(`[SW] Migrated ${allRecords.length} record(s) from ${LEGACY_DB_NAME} to ${FILE_DB_NAME}`)
+  logger.log(`Migrated ${allRecords.length} record(s) from ${LEGACY_DB_NAME} to ${FILE_DB_NAME}`)
 }
 
 function parseFileIdFromPath (path) {
@@ -179,11 +235,13 @@ function parseFileIdFromPath (path) {
 }
 
 async function handleUploadFile (request) {
+  logger.log("Handling file uploading");
   try {
     const blob = await request.blob()
     const id = crypto.randomUUID()
     const contentType = blob.type || 'application/octet-stream'
     await saveFileRecord(id, blob, contentType)
+    logger.log("File upload success");
     return new Response(
       JSON.stringify({ id, url: `${FILE_API_BASE}/${id}` }),
       {
@@ -191,12 +249,13 @@ async function handleUploadFile (request) {
       }
     )
   } catch (error) {
-    console.error('[SW] File upload failed', error)
+    logger.error('File upload failed', error)
     return new Response('File upload failed', { status: 500 })
   }
 }
 
 async function handleGetFile (id) {
+  logger.log("Getting file");
   try {
     let record = await loadFileRecord(id)
     if (!record) {
@@ -211,12 +270,13 @@ async function handleGetFile (id) {
       headers: { 'Content-Type': record.contentType }
     })
   } catch (error) {
-    console.error('[SW] File load failed', error)
+    logger.error('File load failed', error)
     return new Response('File load error', { status: 500 })
   }
 }
 
 self.addEventListener('install', event => {
+  logger.log("Installing");
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
@@ -226,6 +286,7 @@ self.addEventListener('install', event => {
 })
 
 self.addEventListener('activate', event => {
+  logger.log("Activating");
   event.waitUntil(
     caches
       .keys()
@@ -234,19 +295,25 @@ self.addEventListener('activate', event => {
           names
             .filter(n => !KNOWN_CACHES.includes(n))
             .map(n => {
-              console.log(`[SW] Deleting stale cache: ${n}`)
+              logger.log(`Deleting stale cache: ${n}`)
               return caches.delete(n)
             })
         )
       )
       .then(() => migrateLegacyImagesIfNeeded())
-      .catch(err => console.error('[SW] Migration failed', err))
+      .catch(err => logger.error('Migration failed', err))
       .then(() => self.clients.claim())
   )
 })
 
 self.addEventListener('fetch', event => {
-  console.log('[SW]', event.request.method, event.request.url)
+  logger.log(event.request.method, event.request.url)
+
+  //if (DEV) {
+  //  event.respondWith(fetch(event.request));
+  //  return;
+  //}
+
   const { request } = event
   const url = new URL(request.url)
 
@@ -254,16 +321,21 @@ self.addEventListener('fetch', event => {
 
   const fileId = parseFileIdFromPath(url.pathname)
   if (request.method === 'POST' && url.pathname === FILE_API_BASE) {
+    logger.log("request.method === 'POST' && url.pathname === FILE_API_BASE");
     event.respondWith(handleUploadFile(request))
     return
   }
 
   if (request.method === 'GET' && fileId) {
+    logger.log("request.method === 'GET' && fileId")
     event.respondWith(handleGetFile(fileId))
     return
   }
 
-  if (request.method !== 'GET') return
+  if (request.method !== 'GET') {
+    logger.log("request.method !== 'GET'")
+    return
+  }
 
   if (isStaticAsset(url)) {
     event.respondWith(cacheFirst(request, STATIC_CACHE))
@@ -301,7 +373,7 @@ async function cacheFirst (request, cacheName) {
     if (response.ok) cache.put(request, response.clone())
     return response
   } catch (err) {
-    console.warn('[SW] cache-first miss + network failure', request.url, err)
+    logger.warn('cache-first miss + network failure', request.url, err)
     return new Response('Asset unavailable offline', {
       status: 503,
       statusText: 'Service Unavailable'
@@ -351,7 +423,7 @@ async function staleWhileRevalidate (request, cacheName) {
 
 self.addEventListener('message', event => {
   if (event.data?.type === 'SKIP_WAITING') {
-    console.log('[SW] Received SKIP_WAITING, activating immediately.')
+    logger.log('Received SKIP_WAITING, activating immediately.')
     self.skipWaiting()
   }
 })

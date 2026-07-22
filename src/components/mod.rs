@@ -31,7 +31,6 @@ pub use notification_popup::NotificationPopup;
 pub use status_message::StatusMessage;
 pub use switch::Switch;
 pub use custom_field_form::CustomFieldForm;
-pub use coming_soon::ComingSoon;
 pub use date_select::DateSelect;
 pub use post::Post;
 pub use front_role_dropdown::FrontRoleDropdown;

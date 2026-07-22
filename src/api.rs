@@ -415,3 +415,29 @@ pub async fn request_persistent_storage() -> Result<bool, wasm_bindgen::JsValue>
     let granted = JsFuture::from(storage.persist()?).await?;
     Ok(granted.as_bool().unwrap_or(false))
 }
+
+pub mod eruda {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen(inline_js = r#"
+        export function eruda_init() {
+            if (window.eruda) { window.eruda.init(); }
+        }
+        export function eruda_destroy() {
+            try { window.eruda.destroy(); } catch (e) {}
+        }
+        export function eruda_show() {
+            try { window.eruda.show(); } catch (e) {}
+        }
+        export function eruda_set_button_visible(visible) {
+            const btn = document.querySelector('.eruda-entry-btn');
+            if (btn) { btn.style.display = visible ? '' : 'none'; }
+        }
+    "#)]
+    extern "C" {
+        pub fn eruda_init();
+        pub fn eruda_destroy();
+        pub fn eruda_show();
+        pub fn eruda_set_button_visible(visible: bool);
+    }
+}

@@ -15,7 +15,6 @@ pub fn NotificationPopup(
         let fronters = use_context::<Memo<Option<Vec<Uuid>>>>();
         
         let mentioned_users = use_memo(move || {
-            info!("Running notifications memo");
             let mut m = Vec::<Member>::new();
             match fronters() {
                 Some(f) => {
@@ -45,10 +44,6 @@ pub fn NotificationPopup(
                 showed_notification.set(true);
             });
         });
-
-        info!("Fronters: {:#?}", fronters());
-        info!("Mentioned users: {:#?}", mentioned_users());
-        info!("All notifications: {:#?}", db().user_mentions);
 
         rsx! {
             div { class: "w-full p-5 fixed z-50",

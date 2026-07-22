@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::{
-    api::request_persistent_storage,
+    api::{eruda::*, request_persistent_storage},
     components::{NotificationPopup, StatusMessage},
     db::{load_database, save_database},
     icons::*,
@@ -243,6 +243,15 @@ fn AppLoaded(mut loaded: Signal<Option<DatabaseState>>) -> Element {
                 format!("Error requesting persistent storage: {:#?}", err),
                 StatusLevel::Error,
             ),
+        }
+    });
+
+    use_effect(move || {
+        if db().settings.read().dev_tools {
+            eruda_init();
+            eruda_set_button_visible(true);
+        } else {
+            eruda_set_button_visible(false);
         }
     });
 

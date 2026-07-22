@@ -11,10 +11,6 @@ pub fn Journal() -> Element {
     let date = use_signal(|| Utc::now().date_naive());
     let date_entries = use_memo(move || date_map().get(&date()).cloned());
 
-    info!("{:#?}", date_map());
-    info!("{:#?}", date());
-    info!("{:#?}", date_entries());
-
     let mut viewed_entry_id = use_signal(|| None::<uuid::Uuid>);
 
     use_effect(move || {
@@ -35,8 +31,6 @@ pub fn Journal() -> Element {
         let _ = viewed_entry_id();
         show_post.set(false);
     });
-
-    info!("{:#?}", viewed_entry_id());
 
     rsx! {
         DateSelect { date }

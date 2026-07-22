@@ -3,7 +3,6 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn FrontRoleDropdown(front_role: Signal<FrontRole>) -> Element {
-    info!("Front role: {}", front_role().to_string());
     rsx! {
         select {
             class: "select w-full",

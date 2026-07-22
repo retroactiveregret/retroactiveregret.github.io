@@ -47,9 +47,6 @@ pub fn EditMember(id: Uuid) -> Element {
         })
         .collect();
 
-    info!("{:#?}", db().custom_fields);
-    info!("{:#?}", db().custom_field_values);
-
     let mut status_message = use_context::<Signal<Status>>();
 
     let save_member = {

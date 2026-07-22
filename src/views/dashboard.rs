@@ -5,10 +5,8 @@ pub fn Dashboard() -> Element {
     let db = use_context::<Signal<Database>>();
     let status_message = use_context::<Signal<Status>>();
     let active = use_memo(move || {
-        info!("Memo");
         db().get_active_period()
     });
-    info!("Active: {:#?}", active());
 
     rsx! {
         div { class: "flex flex-row gap-4 p-4 overflow-x-scroll",

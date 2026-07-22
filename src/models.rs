@@ -151,11 +151,9 @@ impl Database {
         if let Some((_, fp)) = self.front_periods.read().last() {
             match &fp.ended_at {
                 None => {
-                    info!("Active period: {:#?}", fp);
                     Some(fp.clone())
                 }
                 Some(_) => {
-                    info!("No active period");
                     None
                 }
             }
@@ -170,17 +168,11 @@ impl Database {
         member_id: Uuid,
     ) -> Option<CustomFieldValue> {
         for value in (self.custom_field_values)() {
-            info!("value.field_id == field_id: {}", value.field_id == field_id);
-            info!(
-                "value.member_id == member_id: {}",
-                value.member_id == member_id
-            );
             if value.field_id == field_id && value.member_id == member_id {
-                info!("Found {:#?}", value);
                 return Some(value.clone());
             }
         }
-        info!("No value found");
+        info!("No value found for field {}", field_id);
         return None;
     }
 
@@ -439,6 +431,7 @@ pub struct Settings {
 
     pub sanitize_html: bool,
     pub app_lock: Option<String>,
+    pub dev_tools: bool,
 }
 
 impl Default for Settings {
@@ -455,6 +448,7 @@ impl Default for Settings {
 
             sanitize_html: true,
             app_lock: None,
+            dev_tools: false,
         }
     }
 }

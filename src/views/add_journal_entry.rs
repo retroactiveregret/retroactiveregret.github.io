@@ -23,8 +23,7 @@ pub fn AddJournalEntry() -> Element {
         authors_input(),
         content_warning_input(),
     ) {
-        Ok(post) => {
-            info!("Created journal post {:#?}", post);
+        Ok(_) => {
             navigator().push(Route::Journal {});
         }
         Err(e) => status_message
