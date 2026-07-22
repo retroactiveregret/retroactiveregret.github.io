@@ -342,6 +342,7 @@ struct ImageUploadResponse {
 }
 
 pub async fn upload(blob: Blob) -> Result<Uuid, JsValue> {
+    info!("Blob size {}", blob.size());
     let init = RequestInit::new();
     init.set_method("POST");
     init.set_body(&JsValue::from(blob));

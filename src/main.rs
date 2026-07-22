@@ -57,6 +57,8 @@ enum Route {
             ImportExport {},
             #[route("/security")]
             Security {},
+            #[route("/dev")]
+            Dev {},
         #[end_nest]
     #[end_layout]
     #[layout(Fullscreen)]

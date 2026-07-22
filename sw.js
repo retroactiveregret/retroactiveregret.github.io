@@ -265,6 +265,7 @@ async function handleGetFile (id) {
     if (!record) {
       return new Response('File not found', { status: 404 })
     }
+    logger.log("Content-Type", record.contentType);
     return new Response(record.blob, {
       status: 200,
       headers: { 'Content-Type': record.contentType }
@@ -308,11 +309,6 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   logger.log(event.request.method, event.request.url)
-
-  //if (DEV) {
-  //  event.respondWith(fetch(event.request));
-  //  return;
-  //}
 
   const { request } = event
   const url = new URL(request.url)

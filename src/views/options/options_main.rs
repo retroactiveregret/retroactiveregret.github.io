@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
-
-use crate::Route;
+use crate::{Route, models::Database};
 
 #[component]
 pub fn Options() -> Element {
+    let settings = use_context::<Signal<Database>>()().settings;
     rsx! {
         div { class: "p-4 pb-0 text-xs opacity-60 tracking-wide", "Options" }
         ul { class: "list",
@@ -27,6 +27,11 @@ pub fn Options() -> Element {
             }
             li { class: "list-row",
                 Link { to: Route::About {}, "About" }
+            }
+            if settings().dev_tools {
+                li { class: "list-row",
+                    Link { to: Route::Dev {}, "Dev Tools" }
+                }
             }
         }
     }
