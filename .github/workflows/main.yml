@@ -1,79 +1,63 @@
 name: Deploy to GitHub Pages
+
 on:
   push:
     branches:
       - main
-      - dev
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: main
 
-      - name: Checkout dev
-        uses: actions/checkout@v4
-        with:
-          ref: dev
-          path: dev
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+
       - uses: Swatinem/rust-cache@v2
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+
+      - run: npm install
+
       - name: Install Trunk
         uses: jetli/trunk-action@v0.5.0
+
       - name: Install Dioxus CLI
         run: curl -sSL https://dioxus.dev/install.sh | bash
+
       - name: Add Dioxus CLI to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: npm install (main)
-        run: npm install
-        working-directory: main
-
-      - name: npm install (dev)
-        run: npm install
-        working-directory: dev
-
-      - name: Build main (served at /)
-        run: trunk build --release --public-url /
-        working-directory: main
-
-      - name: Build dev (served at /dev)
-        run: trunk build --release --public-url /dev/
-        working-directory: dev
-
-      - name: Assemble combined site
-        run: |
-          mkdir -p _site
-          cp -r main/dist/* _site/
-          mkdir -p _site/dev
-          cp -r dev/dist/* _site/dev/
+      - name: Build
+        run: trunk build --release
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
 
   deploy:
     needs: build
+
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
