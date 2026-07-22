@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{api::image_url, components::MemberAvatar, models::*};
+use crate::{api::file_url, components::MemberAvatar, models::*};
 
 #[component]
 pub fn MemberList(db: Signal<Database>, on_click: Callback<Uuid>) -> Element {
@@ -12,7 +12,7 @@ pub fn MemberList(db: Signal<Database>, on_click: Callback<Uuid>) -> Element {
             for (id , member) in db().members.read().iter().rev().filter(|(_, m)| !m.archived) {
                 li {
                     class: "list-row flex items-center bg-cover bg-center rounded-none relative overflow-hidden",
-                    background_image: format!("url({})", image_url(member.banner_asset_id.unwrap_or_default())),
+                    background_image: format!("url({})", file_url(member.banner_asset_id.unwrap_or_default())),
                     onclick: {
                         let id = *id;
                         move |_| on_click.call(id)

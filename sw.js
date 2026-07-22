@@ -5,10 +5,19 @@ const STATIC_CACHE = `app-static-${APP_VERSION}`
 const DYNAMIC_CACHE = `app-dynamic-${APP_VERSION}`
 const KNOWN_CACHES = [STATIC_CACHE, DYNAMIC_CACHE]
 
-const IMAGE_DB_NAME = 'dioxus_app_images_db'
-const IMAGE_DB_VERSION = 1
-const IMAGE_STORE = 'images'
-const IMAGE_API_BASE = '/images'
+
+const FILE_DB_NAME = 'identi_files_db'
+const FILE_DB_VERSION = 1
+const FILE_STORE = 'files'
+const META_STORE = 'meta'
+const FILE_API_BASE = '/files'
+
+
+const LEGACY_DB_NAME = 'dioxus_app_images_db'
+const LEGACY_STORE = 'images'
+const LEGACY_API_BASE = '/images'
+
+const MIGRATION_FLAG_KEY = 'migrated_from_dioxus_app_images_db'
 
 const PRECACHE_URLS = ['/', '/index.html']
 
@@ -27,14 +36,17 @@ function waitForTransaction (tx) {
   })
 }
 
-function openImageDb () {
+function openFileDb () {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(IMAGE_DB_NAME, IMAGE_DB_VERSION)
+    const request = indexedDB.open(FILE_DB_NAME, FILE_DB_VERSION)
 
     request.onupgradeneeded = event => {
       const db = event.target.result
-      if (!db.objectStoreNames.contains(IMAGE_STORE)) {
-        db.createObjectStore(IMAGE_STORE, { keyPath: 'id' })
+      if (!db.objectStoreNames.contains(FILE_STORE)) {
+        db.createObjectStore(FILE_STORE, { keyPath: 'id' })
+      }
+      if (!db.objectStoreNames.contains(META_STORE)) {
+        db.createObjectStore(META_STORE, { keyPath: 'key' })
       }
     }
 
@@ -43,19 +55,43 @@ function openImageDb () {
   })
 }
 
-async function saveImageRecord (id, blob, contentType) {
-  const db = await openImageDb()
-  const tx = db.transaction([IMAGE_STORE], 'readwrite')
-  const store = tx.objectStore(IMAGE_STORE)
+async function openLegacyDbIfExists () {
+  if (typeof indexedDB.databases === 'function') {
+    const dbs = await indexedDB.databases()
+    const exists = dbs.some(d => d.name === LEGACY_DB_NAME)
+    if (!exists) return null
+  }
+
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(LEGACY_DB_NAME)
+
+    
+    
+    request.onupgradeneeded = event => {
+      const db = event.target.result
+      if (!db.objectStoreNames.contains(LEGACY_STORE)) {
+        db.createObjectStore(LEGACY_STORE, { keyPath: 'id' })
+      }
+    }
+
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+async function saveFileRecord (id, blob, contentType) {
+  const db = await openFileDb()
+  const tx = db.transaction([FILE_STORE], 'readwrite')
+  const store = tx.objectStore(FILE_STORE)
   store.put({ id, blob, contentType, createdAt: new Date().toISOString() })
   await waitForTransaction(tx)
   db.close()
 }
 
-async function loadImageRecord (id) {
-  const db = await openImageDb()
-  const tx = db.transaction([IMAGE_STORE], 'readonly')
-  const store = tx.objectStore(IMAGE_STORE)
+async function loadFileRecord (id) {
+  const db = await openFileDb()
+  const tx = db.transaction([FILE_STORE], 'readonly')
+  const store = tx.objectStore(FILE_STORE)
   const request = store.get(id)
   const result = await requestPromise(request)
   await waitForTransaction(tx)
@@ -63,44 +99,120 @@ async function loadImageRecord (id) {
   return result
 }
 
-function parseImageIdFromPath (path) {
-  const prefix = `${IMAGE_API_BASE}/`
-  if (!path.startsWith(prefix)) return null
-  const id = path.slice(prefix.length)
-  return /^[0-9a-fA-F-]{36}$/.test(id) ? id : null
+async function loadLegacyRecord (id) {
+  const legacyDb = await openLegacyDbIfExists()
+  if (!legacyDb) return null
+  if (!legacyDb.objectStoreNames.contains(LEGACY_STORE)) {
+    legacyDb.close()
+    return null
+  }
+  const tx = legacyDb.transaction([LEGACY_STORE], 'readonly')
+  const store = tx.objectStore(LEGACY_STORE)
+  const request = store.get(id)
+  const result = await requestPromise(request)
+  await waitForTransaction(tx)
+  legacyDb.close()
+  return result
 }
 
-async function handleUploadImage (request) {
+async function getMigrationFlag (db) {
+  const tx = db.transaction([META_STORE], 'readonly')
+  const store = tx.objectStore(META_STORE)
+  const result = await requestPromise(store.get(MIGRATION_FLAG_KEY))
+  await waitForTransaction(tx)
+  return Boolean(result && result.value)
+}
+
+async function setMigrationFlag (db) {
+  const tx = db.transaction([META_STORE], 'readwrite')
+  const store = tx.objectStore(META_STORE)
+  store.put({ key: MIGRATION_FLAG_KEY, value: true })
+  await waitForTransaction(tx)
+}
+
+async function migrateLegacyImagesIfNeeded () {
+  const fileDb = await openFileDb()
+
+  const alreadyMigrated = await getMigrationFlag(fileDb)
+  if (alreadyMigrated) {
+    fileDb.close()
+    return
+  }
+
+  const legacyDb = await openLegacyDbIfExists()
+  if (!legacyDb || !legacyDb.objectStoreNames.contains(LEGACY_STORE)) {
+    if (legacyDb) legacyDb.close()
+    await setMigrationFlag(fileDb)
+    fileDb.close()
+    return
+  }
+
+  const legacyTx = legacyDb.transaction([LEGACY_STORE], 'readonly')
+  const legacyStore = legacyTx.objectStore(LEGACY_STORE)
+  const allRecords = await requestPromise(legacyStore.getAll())
+  await waitForTransaction(legacyTx)
+  legacyDb.close()
+
+  if (allRecords.length > 0) {
+    const writeTx = fileDb.transaction([FILE_STORE], 'readwrite')
+    const writeStore = writeTx.objectStore(FILE_STORE)
+    for (const record of allRecords) {
+      writeStore.put(record) 
+    }
+    await waitForTransaction(writeTx)
+  }
+
+  await setMigrationFlag(fileDb)
+  fileDb.close()
+  console.log(`[SW] Migrated ${allRecords.length} record(s) from ${LEGACY_DB_NAME} to ${FILE_DB_NAME}`)
+}
+
+function parseFileIdFromPath (path) {
+  for (const base of [FILE_API_BASE, LEGACY_API_BASE]) {
+    const prefix = `${base}/`
+    if (path.startsWith(prefix)) {
+      const id = path.slice(prefix.length)
+      return /^[0-9a-fA-F-]{36}$/.test(id) ? id : null
+    }
+  }
+  return null
+}
+
+async function handleUploadFile (request) {
   try {
     const blob = await request.blob()
     const id = crypto.randomUUID()
     const contentType = blob.type || 'application/octet-stream'
-    await saveImageRecord(id, blob, contentType)
+    await saveFileRecord(id, blob, contentType)
     return new Response(
-      JSON.stringify({ id, url: `${IMAGE_API_BASE}/${id}` }),
+      JSON.stringify({ id, url: `${FILE_API_BASE}/${id}` }),
       {
         headers: { 'Content-Type': 'application/json' }
       }
     )
   } catch (error) {
-    console.error('[SW] Image upload failed', error)
-    return new Response('Image upload failed', { status: 500 })
+    console.error('[SW] File upload failed', error)
+    return new Response('File upload failed', { status: 500 })
   }
 }
 
-async function handleGetImage (id) {
+async function handleGetFile (id) {
   try {
-    const record = await loadImageRecord(id)
+    let record = await loadFileRecord(id)
     if (!record) {
-      return new Response('Image not found', { status: 404 })
+      
+      record = await loadLegacyRecord(id)
+    }
+    if (!record) {
+      return new Response('File not found', { status: 404 })
     }
     return new Response(record.blob, {
       status: 200,
       headers: { 'Content-Type': record.contentType }
     })
   } catch (error) {
-    console.error('[SW] Image load failed', error)
-    return new Response('Image load error', { status: 500 })
+    console.error('[SW] File load failed', error)
+    return new Response('File load error', { status: 500 })
   }
 }
 
@@ -127,6 +239,8 @@ self.addEventListener('activate', event => {
             })
         )
       )
+      .then(() => migrateLegacyImagesIfNeeded())
+      .catch(err => console.error('[SW] Migration failed', err))
       .then(() => self.clients.claim())
   )
 })
@@ -138,14 +252,14 @@ self.addEventListener('fetch', event => {
 
   if (!request.url.startsWith(self.location.origin)) return
 
-  const imageId = parseImageIdFromPath(url.pathname)
-  if (request.method === 'POST' && url.pathname === IMAGE_API_BASE) {
-    event.respondWith(handleUploadImage(request))
+  const fileId = parseFileIdFromPath(url.pathname)
+  if (request.method === 'POST' && url.pathname === FILE_API_BASE) {
+    event.respondWith(handleUploadFile(request))
     return
   }
 
-  if (request.method === 'GET' && imageId) {
-    event.respondWith(handleGetImage(imageId))
+  if (request.method === 'GET' && fileId) {
+    event.respondWith(handleGetFile(fileId))
     return
   }
 
@@ -160,7 +274,6 @@ self.addEventListener('fetch', event => {
   }
 })
 
-/** True for assets whose filenames are content-hashed by Trunk. */
 function isStaticAsset (url) {
   const p = url.pathname
   return [
@@ -178,10 +291,6 @@ function isStaticAsset (url) {
   ].some(ext => p.endsWith(ext))
 }
 
-/**
- * Cache-first: return the cached response immediately.
- * On a cache miss, fetch from the network, store, then return.
- */
 async function cacheFirst (request, cacheName) {
   const cache = await caches.open(cacheName)
   const cached = await cache.match(request)
@@ -200,11 +309,6 @@ async function cacheFirst (request, cacheName) {
   }
 }
 
-/**
- * Network-first: try the network; on failure serve from cache.
- * For navigation, falls back to the /index.html SPA shell so that
- * client-side routing (Dioxus Router) works fully offline.
- */
 async function networkFirst (request) {
   const cache = await caches.open(DYNAMIC_CACHE)
 
@@ -227,10 +331,6 @@ async function networkFirst (request) {
   }
 }
 
-/**
- * Stale-while-revalidate: return from cache immediately (if available)
- * and update the cache entry from the network in the background.
- */
 async function staleWhileRevalidate (request, cacheName) {
   const cache = await caches.open(cacheName)
 
@@ -251,7 +351,7 @@ async function staleWhileRevalidate (request, cacheName) {
 
 self.addEventListener('message', event => {
   if (event.data?.type === 'SKIP_WAITING') {
-    console.log('[SW] Received SKIP_WAITING — activating immediately.')
+    console.log('[SW] Received SKIP_WAITING, activating immediately.')
     self.skipWaiting()
   }
 })

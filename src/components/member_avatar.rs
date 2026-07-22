@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{api::image_url, icons::*};
+use crate::{api::file_url, icons::*};
 
 #[component]
 pub fn MemberAvatar(img_id: Option<Uuid>, size: usize) -> Element {
@@ -10,7 +10,7 @@ pub fn MemberAvatar(img_id: Option<Uuid>, size: usize) -> Element {
             img {
                 class: "size-[var(--s)] rounded-box foreground object-cover",
                 style: format!("--s: {}px", size * 4),
-                src: image_url(asset),
+                src: file_url(asset),
             }
         },
         None => rsx! {

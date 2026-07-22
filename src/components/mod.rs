@@ -15,6 +15,8 @@ pub mod coming_soon;
 pub mod date_select;
 pub mod post;
 pub mod front_role_dropdown;
+pub mod download_button;
+pub mod upload_button;
 
 pub use board_posts::BoardPosts;
 pub use front_history_list::FrontHistoryList;
@@ -33,6 +35,8 @@ pub use coming_soon::ComingSoon;
 pub use date_select::DateSelect;
 pub use post::Post;
 pub use front_role_dropdown::FrontRoleDropdown;
+pub use download_button::DownloadButton;
+pub use upload_button::UploadButton;
 
 pub mod color_picker;
 pub mod input;

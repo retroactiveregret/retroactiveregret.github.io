@@ -341,13 +341,13 @@ struct ImageUploadResponse {
     url: String,
 }
 
-pub async fn upload_image(blob: Blob) -> Result<Uuid, JsValue> {
+pub async fn upload(blob: Blob) -> Result<Uuid, JsValue> {
     let init = RequestInit::new();
     init.set_method("POST");
     init.set_body(&JsValue::from(blob));
     init.set_mode(RequestMode::SameOrigin);
 
-    let request = Request::new_with_str_and_init("/images", &init)?;
+    let request = Request::new_with_str_and_init("/files", &init)?;
     let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window object"))?;
     let fetch_value = JsFuture::from(window.fetch_with_request(&request)).await?;
     let response: Response = fetch_value.dyn_into().unwrap_throw();
@@ -368,8 +368,8 @@ pub async fn upload_image(blob: Blob) -> Result<Uuid, JsValue> {
     Uuid::parse_str(&id_str).map_err(|e| JsValue::from_str(&format!("Invalid image id: {e}")))
 }
 
-pub fn image_url(id: Uuid) -> String {
-    format!("/images/{id}")
+pub fn file_url(id: Uuid) -> String {
+    format!("/files/{id}")
 }
 
 fn not_rand(start: usize, end: usize, seed: usize) -> usize {

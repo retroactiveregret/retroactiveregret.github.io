@@ -4,7 +4,7 @@ use uuid::Uuid;
 use web_sys::Blob;
 
 use crate::{
-    api::{self, image_url},
+    api::{self, file_url},
     components::MemberAvatar,
     icons::*,
     models::*,
@@ -43,7 +43,7 @@ pub fn MemberForm(
                             r#for: "banner-upload",
                             match banner_id() {
                                 Some(banner) => rsx! {
-                                    img { class: "w-full h-48 object-cover", src: image_url(banner) }
+                                    img { class: "w-full h-48 object-cover", src: file_url(banner) }
                                 },
                                 None => rsx! {
                                     Icon { class: "m-4", size: 24, data: mdi_light::Pencil }
@@ -150,7 +150,7 @@ fn ImageUpload(
                             match file.get_web_file() {
                                 Some(web_file) => {
                                     let blob: Blob = web_file.into();
-                                    match api::upload_image(blob).await {
+                                    match api::upload(blob).await {
                                         Ok(new_uuid) => {
                                             on_image(new_uuid);
                                             uuid.set(Some(new_uuid));
