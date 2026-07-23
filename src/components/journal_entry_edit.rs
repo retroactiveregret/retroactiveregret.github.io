@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{components::{MemberAvatar, MemberList}, icons::*, models::*};
+use crate::{components::{MemberAvatar, MemberPicker}, icons::*, models::*};
 
 #[component]
 pub fn JournalEntryEdit(
@@ -13,10 +13,15 @@ pub fn JournalEntryEdit(
 ) -> Element {
     let content_warning_tmp = use_signal(|| content_warning_input().unwrap_or(String::new()));
     let checked = use_memo(move || content_warning_input().is_some());
-    let show_select = use_signal(|| false);
+    let mut show_select = use_signal(|| false);
+
+    let add_author = move |id: Uuid| {
+        authors_input.push(id);
+        show_select.set(false);
+    };
 
     rsx! {
-        div { class: "flex flex-col gap-4 h-full grow p-7",
+        div { class: "flex flex-col gap-4 h-full grow",
             div { class: "flex flex-row justify-between",
                 JournalEntryEditAuthorList { db, authors_input, show_select }
                 JournalEntryEditContentWarning {
@@ -28,7 +33,7 @@ pub fn JournalEntryEdit(
             JournalEntryEditTextFields { title_input, body_input }
         }
 
-        JournalEntryEditMemberPicker { db, authors_input, show_select }
+        MemberPicker { db, show_select, on_click: add_author }
     }
 }
 
@@ -152,27 +157,5 @@ fn JournalEntryEditContentWarning(
             }
             label { class: "modal-backdrop", r#for: "content-warning", "Close" }
         }
-    }
-}
-
-#[component]
-fn JournalEntryEditMemberPicker(
-    db: Signal<Database>,
-    authors_input: Signal<Vec<Uuid>>,
-    show_select: Signal<bool>,
-) -> Element {
-    let add_author = move |id: Uuid| {
-        authors_input.push(id);
-        show_select.set(false);
-    };
-
-    if show_select() {
-        rsx! {
-            div { class: "w-full h-full fixed bg-base-100 z-1 inset-0",
-                MemberList { db, on_click: add_author }
-            }
-        }
-    } else {
-        rsx! {}
     }
 }

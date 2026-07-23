@@ -17,6 +17,7 @@ pub mod post;
 pub mod front_role_dropdown;
 pub mod download_button;
 pub mod upload_button;
+pub mod member_picker;
 
 pub use board_posts::BoardPosts;
 pub use front_history_list::FrontHistoryList;
@@ -36,6 +37,7 @@ pub use post::Post;
 pub use front_role_dropdown::FrontRoleDropdown;
 pub use download_button::DownloadButton;
 pub use upload_button::UploadButton;
+pub use member_picker::MemberPicker;
 
 pub mod color_picker;
 pub mod input;

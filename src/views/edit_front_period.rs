@@ -139,11 +139,7 @@ pub fn EditFrontPeriod(id: Uuid) -> Element {
             }
         }
 
-        if show_select() {
-            div { class: "w-screen h-full fixed inset-0 bg-base-100 z-1 m-0",
-                MemberList { db, on_click: add_member }
-            }
-        }
+        MemberPicker { db, show_select, on_click: add_member }
 
         input { class: "modal-toggle", id: "delete-warn", r#type: "checkbox" }
         div { class: "modal", role: "dialog",

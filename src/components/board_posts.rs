@@ -7,7 +7,7 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
-    api, components::{MemberAvatar, MemberList, Post}, icons::*, models::*,
+    api, components::{MemberAvatar, MemberList, MemberPicker, Post}, icons::*, models::*,
 };
 
 #[component]
@@ -177,16 +177,8 @@ fn EditBoardPost(
             }
         }
 
-        if show_author_select() {
-            div { class: "inset-0 fixed bg-base-100 z-1",
-                MemberList { db, on_click: set_author }
-            }
-        }
+        MemberPicker { db, show_select: show_author_select, on_click: set_author }
 
-        if show_mention_select() {
-            div { class: "inset-0 fixed bg-base-100 z-1",
-                MemberList { db, on_click: add_mention }
-            }
-        }
+        MemberPicker { db, show_select: show_mention_select, on_click: add_mention }
     }
 }

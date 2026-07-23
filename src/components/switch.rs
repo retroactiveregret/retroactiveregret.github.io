@@ -2,7 +2,7 @@ use chrono::Utc;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{api::switch, components::MemberList, icons::*, models::*};
+use crate::{api::switch, components::{MemberList, MemberPicker}, icons::*, models::*};
 
 #[component]
 pub fn Switch(db: Signal<Database>, status_message: Signal<Status>) -> Element {
@@ -69,14 +69,8 @@ pub fn Switch(db: Signal<Database>, status_message: Signal<Status>) -> Element {
             }
         }
 
-        if show_select_swap() {
-            div { class: "w-screen h-full fixed inset-0 bg-base-100 z-1 m-0",
-                MemberList { db, on_click: swap_on_click }
-            }
-        } else if show_select_add() {
-            div { class: "w-screen h-full fixed inset-0 bg-base-100 z-1 m-0",
-                MemberList { db, on_click: add_on_click }
-            }
-        }
+        MemberPicker { db, show_select: show_select_swap, on_click: swap_on_click }
+
+        MemberPicker { db, show_select: show_select_add, on_click: add_on_click }
     }
 }
