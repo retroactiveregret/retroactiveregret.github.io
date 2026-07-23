@@ -64,6 +64,8 @@ enum Route {
     #[layout(Fullscreen)]
         #[route("/members/new")]
         AddMember {},
+        #[route("/members/:id")]
+        MemberView { id: Uuid },
         #[route("/members/edit/:id")]
         EditMember { id: Uuid },
         #[route("/journal/post/:id")]

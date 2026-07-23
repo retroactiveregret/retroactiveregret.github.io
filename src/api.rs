@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use uuid::Uuid;
 use wasm_bindgen::{JsCast, JsValue, UnwrapThrowExt};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{window, Blob, Request, RequestInit, RequestMode, Response};
+use web_sys::{window, Blob, Request, RequestInit, Response};
 
 use crate::models::*;
 

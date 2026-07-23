@@ -30,3 +30,6 @@ pub use edit_front_assignment::EditFrontAssignment;
 
 pub mod options;
 pub use options::*;
+
+pub mod member_view;
+pub use member_view::MemberView;

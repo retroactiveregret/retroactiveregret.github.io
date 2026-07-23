@@ -11,7 +11,7 @@ pub fn Members() -> Element {
             MemberList {
                 db,
                 on_click: move |id: Uuid| {
-                    use_navigator().push(Route::EditMember { id });
+                    use_navigator().push(Route::MemberView { id });
                 },
             }
             div { class: "fab bottom-20",
