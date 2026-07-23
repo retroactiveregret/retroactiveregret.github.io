@@ -36,7 +36,9 @@ pub fn Post(db: Signal<Database>, status_message: Signal<Status>, post: BoardPos
                     div {}
                 }
             }
-            p { "{post.content}" }
+
+            Markdown { class: "prose", text: post.content }
+
             div { class: "flex flex-row mt-2",
                 div { class: "flex flex-row gap-2 overflow-x-scroll grow",
                     for member in mentioned {
